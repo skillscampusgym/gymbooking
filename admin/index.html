@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Portal | SKILLS Gym Rental</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { blue: '#2D5DF6', blueHover: '#1B44C8', dark: '#0F172A', soft: '#F3F6FD' } }, boxShadow: { 'saas': '0 20px 40px -15px rgba(0,0,0,0.03)', 'floating': '0 30px 60px -12px rgba(45, 93, 246, 0.12)' } } } }
+    </script>
+    <style type="text/tailwindcss">
+        @layer components {
+            .form-input { @apply w-full rounded-xl md:rounded-2xl border border-slate-200/80 bg-brand-soft py-3 md:py-3.5 px-4 md:px-5 text-slate-800 placeholder-slate-400 outline-none transition-all duration-300 hover:bg-slate-50 focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-blue/15 text-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 font-medium; }
+            .form-label { @apply mb-2 md:mb-2.5 block text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500; }
+            select.form-input { @apply appearance-none bg-no-repeat pr-10 cursor-pointer disabled:cursor-not-allowed; background-position: right 1.25rem center; background-size: 1.2em 1.2em; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); }
+            input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
+            input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            @media (min-width: 768px) { ::-webkit-scrollbar { width: 6px; height: 6px; } } 
+            ::-webkit-scrollbar-track { background: transparent; } 
+            ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+            
+            /* Toggle Switch Styles */
+            .toggle-checkbox:checked { @apply right-0 border-emerald-500; right: 0; border-color: #10B981; }
+            .toggle-checkbox:checked + .toggle-label { @apply bg-emerald-500; background-color: #10B981; }
+        }
+        .ambient-gradient { background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f8fafc 100%); background-attachment: fixed; }
+        @media print { @page { margin: 0.5cm; size: auto; } body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } #app-wrapper, #toast, .mobile-overlay { display: none !important; } #print-receipt-wrapper { display: block !important; } }
+    </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('appData', () => ({
+                sidebarOpen: false, currentView: 'dashboard', isLoading: false, showReceiptModal: false, showApprovalPrintModal: false, currentDate: new Date().toISOString().split('T')[0],
+                searchQuery: '', 
+                timeBlocks: [ { label: '6:00 AM - 7:00 AM', start: '06:00', end: '07:00', queryTime: '6:00 AM' }, { label: '7:00 AM - 8:00 AM', start: '07:00', end: '08:00', queryTime: '7:00 AM' }, { label: '8:00 AM - 9:00 AM', start: '08:00', end: '09:00', queryTime: '8:00 AM' }, { label: '9:00 AM - 10:00 AM', start: '09:00', end: '10:00', queryTime: '9:00 AM' }, { label: '10:00 AM - 11:00 AM', start: '10:00', end: '11:00', queryTime: '10:00 AM' }, { label: '11:00 AM - 12:00 PM', start: '11:00', end: '12:00', queryTime: '11:00 AM' }, { label: '12:00 PM - 1:00 PM', start: '12:00', end: '13:00', queryTime: '12:00 PM' }, { label: '1:00 PM - 2:00 PM', start: '14:00', end: '15:00', queryTime: '2:00 PM' }, { label: '3:00 PM - 4:00 PM', start: '15:00', end: '16:00', queryTime: '3:00 PM' }, { label: '4:00 PM - 5:00 PM', start: '16:00', end: '17:00', queryTime: '4:00 PM' }, { label: '5:00 PM - 6:00 PM', start: '17:00', end: '18:00', queryTime: '5:00 PM' }, { label: '6:00 PM - 7:00 PM', start: '18:00', end: '19:00', queryTime: '6:00 PM' }, { label: '7:00 PM - 8:00 PM', start: '19:00', end: '20:00', queryTime: '7:00 PM' }, { label: '8:00 PM - 9:00 PM', start: '20:00', end: '21:00', queryTime: '8:00 PM' }, { label: '9:00 PM - 10:00 PM', start: '21:00', end: '22:00', queryTime: '9:00 PM' } ],
+                timeOptions: [ '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM', '10:00 PM' ],
+                facilityMap: { 'Basketball': ['Court 1', 'Court 2', 'Court 3'], 'Volleyball': ['Court 1', 'Court 3'], 'Badminton': ['Court 2'], 'Package A': ['WHOLE GYM'], 'Package B': ['Court 1'], 'Package C': ['ALL 3 COURTS'] },
+                remarksMap: { 'Basketball': 'Regular Game (Max. 20)', 'Volleyball': 'Regular Game (Max. 20)', 'Badminton': 'Regular Game (Max. 20)', 'Package A': '(Whole Gym (3 courts), Bleachers, Fan, Lights.)', 'Package B': '(Exclusive use of Bleachers, Fan, Lights (Max 80))', 'Package C': '(Pkg C: Fan and Lights (Max 50))' },
+
+                bookingForm: { fullName: '', organization: '', email: '', contactNumber: '', address: '', idType: 'National ID', idNumber: '', slots: [ { id: Date.now(), date: new Date().toISOString().split('T')[0], sportType: '', court: '', remarks: '', timeStart: '', timeEnd: '' } ], totalHours: '0', baseAmount: '0.00', grandTotal: '0.00', paymentMode: 'Cash', paymentReference: '', additionalCharges: [] },
+                errors: { paymentReference: false, slots: [{}] }, 
+                localBookings: [], masterList: [], lastSavedBooking: null, itemToApprove: null,
+                
+                // NEW: State for Reschedule/Cancel Management
+                showManageModal: false, manageData: null, manageMode: 'select', isForceMajeure: false, newRescheduleDate: '',
+                
+                // =======================================================
+                // ⚠️ CRITICAL: PASTE YOUR APP SCRIPT URL HERE ⚠️
+                // =======================================================
+                scriptURL: 'https://script.google.com/macros/s/AKfycbxwLn3TWsQt5FEnkNG5yzpweqbhn-RZ1PLrgqJbvcMBbEAAuSxCTTFKwR7h2TX4WhCj/exec',
+
+                init() {
+                    const cachedBookings = localStorage.getItem('skills_gym_bookings');
+                    const cachedMasterList = localStorage.getItem('skills_gym_master_list');
+                    if (cachedBookings) this.localBookings = JSON.parse(cachedBookings);
+                    if (cachedMasterList) this.masterList = JSON.parse(cachedMasterList);
+                    this.loadMasterList();
+                },
+
+                get pendingBookings() { return this.masterList.filter(item => item.status === 'Pending'); },
+
+                get filteredPendingBookings() {
+                    let pending = this.masterList.filter(item => item.status === 'Pending');
+                    if (!this.searchQuery.trim()) return pending;
+                    let q = this.searchQuery.toLowerCase();
+                    return pending.filter(item => (item.bookingRef && item.bookingRef.toLowerCase().includes(q)) || (item.fullName && item.fullName.toLowerCase().includes(q)) || (item.contactNumber && item.contactNumber.includes(q)));
+                },
+
+                // NEW: Filter for Master List Search too (Optional but helpful)
+                get filteredMasterList() {
+                    if (!this.searchQuery.trim()) return this.masterList;
+                    let q = this.searchQuery.toLowerCase();
+                    return this.masterList.filter(item => (item.bookingRef && item.bookingRef.toLowerCase().includes(q)) || (item.fullName && item.fullName.toLowerCase().includes(q)) || (item.contactNumber && item.contactNumber.includes(q)));
+                },
+
+                // ==========================================
+                // CANCELLATION & RESCHEDULING LOGIC
+                // ==========================================
+                openManage(item) {
+                    this.manageData = JSON.parse(JSON.stringify(item));
+                    this.manageMode = 'select'; this.isForceMajeure = false; this.newRescheduleDate = '';
+                    this.showManageModal = true;
+                },
+
+                get penaltyCalculation() {
+                    if (!this.manageData || this.isForceMajeure) return { fee: 0, percentage: '0%' };
+                    
+                    // Parse target date (Assuming format "YYYY-MM-DD" or similar in manageData.date)
+                    const eventDate = new Date(this.manageData.date.split(' ')[0]);
+                    const today = new Date(this.currentDate);
+                    
+                    // Normalize times to midnight to get clean day counts
+                    eventDate.setHours(0,0,0,0); today.setHours(0,0,0,0);
+                    
+                    const diffTime = eventDate - today;
+                    const noticeDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    let percentage = 0;
+                    if (noticeDays >= 7) percentage = 0.20;       // 7+ days notice
+                    else if (noticeDays >= 1) percentage = 0.30;  // 1-3 (extended to 6 logically) days notice
+                    else percentage = 0.50;                       // Same day or past
+
+                    let baseTotal = parseFloat((this.manageData.grandTotal || '0').toString().replace(/,/g, ''));
+                    return { fee: (baseTotal * percentage), percentage: (percentage * 100) + '%' };
+                },
+
+                async submitMutation(action) {
+                    if (action === 'reschedule' && !this.newRescheduleDate) { alert("Please select a new date."); return; }
+                    
+                    this.isLoading = true; this.showManageModal = false;
+                    const penaltyFee = this.penaltyCalculation.fee;
+                    const currentRef = this.manageData.bookingRef.replace('REQ-', 'BK-');
+
+                    // Update the local list
+                    this.masterList.forEach(item => {
+                        let compareRef = (item.bookingRef || '').replace('REQ-', 'BK-');
+                        if (compareRef === currentRef) {
+                            if (action === 'cancel') {
+                                item.status = 'Canceled';
+                                item.remarks = `Canceled. Penalty applied: PHP ${penaltyFee.toFixed(2)} (${this.isForceMajeure ? 'Force Majeure' : this.penaltyCalculation.percentage})`;
+                            } else if (action === 'reschedule') {
+                                item.status = 'Rescheduled';
+                                item.date = this.newRescheduleDate;
+                                item.remarks = `Rescheduled. Penalty applied: PHP ${penaltyFee.toFixed(2)}`;
+                            }
+                        }
+                    });
+
+                    localStorage.setItem('skills_gym_master_list', JSON.stringify(this.masterList));
+
+                    // Mock Backend Update
+                    try {
+                        const payload = { action: "mutate_booking", mutationType: action, bookingRef: currentRef, penalty: penaltyFee, newDate: this.newRescheduleDate, forceMajeure: this.isForceMajeure };
+                        await fetch(this.scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+                        this.showToast(`Booking ${currentRef} successfully ${action}d.`, "success");
+                    } catch (error) { console.error("Offline fallback used."); this.showToast(`Updated offline cache.`, "success"); }
+                    
+                    setTimeout(() => { this.loadMasterList(); }, 1000);
+                },
+                // ==========================================
+
+                initiateApproval(item) { this.itemToApprove = item; this.showApprovalPrintModal = true; },
+                async executeApproval(printReceipt) {
+                    const ref = this.itemToApprove.bookingRef; this.showApprovalPrintModal = false;
+                    this.masterList.forEach(item => { if(item.bookingRef === ref) item.status = 'Confirmed'; });
+                    localStorage.setItem('skills_gym_master_list', JSON.stringify(this.masterList));
+                    this.showToast("Approving booking " + ref + "...", "success");
+                    try {
+                        const payload = { action: "approve", bookingRef: ref };
+                        await fetch(this.scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+                        this.showToast("Booking officially confirmed!", "success");
+                        if (printReceipt) {
+                            const now = new Date();
+                            this.lastSavedBooking = { fullName: this.itemToApprove.fullName, contactNumber: this.itemToApprove.contactNumber, refNumber: ref, printDate: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), slots: [{ date: this.itemToApprove.date.split(' ')[0], court: this.itemToApprove.facility, sportType: 'Reserved Event', timeStart: this.itemToApprove.timeStart, timeEnd: this.itemToApprove.timeEnd }], paymentMode: this.itemToApprove.paymentMode, grandTotal: this.itemToApprove.grandTotal };
+                            setTimeout(() => { window.print(); }, 300);
+                        }
+                        setTimeout(() => { this.loadMasterList(); }, 1500);
+                    } catch (error) { this.showToast("Error communicating with database.", "error"); }
+                },
+
+                get metrics() {
+                    let cash = 0, gcash = 0, bank = 0, grandTotal = 0; let daysMap = { 'Monday': 0, 'Tuesday': 0, 'Wednesday': 0, 'Thursday': 0, 'Friday': 0, 'Saturday': 0, 'Sunday': 0 }; let hoursMap = {}; this.timeBlocks.forEach(b => { hoursMap[b.queryTime] = 0; });
+                    this.masterList.forEach(item => {
+                        if (item.status === 'Pending' || item.status === 'Expired' || item.status === 'Canceled') return; 
+                        let amt = parseFloat((item.grandTotal||'0').toString().replace(/,/g, '')) || 0; grandTotal += amt;
+                        let mode = (item.paymentMode || '').toUpperCase();
+                        if (mode.includes('GCASH')) gcash += amt; else if (mode.includes('BANK') || mode.includes('TRANSFER')) bank += amt; else cash += amt;
+                        if (item.date) { let dateObj = new Date(item.date.split(' ')[0]); if (!isNaN(dateObj.getTime())) { let dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' }); if (daysMap[dayName] !== undefined) daysMap[dayName]++; } }
+                        if (item.timeStart && hoursMap[item.timeStart] !== undefined) hoursMap[item.timeStart]++;
+                    });
+                    let peakDay = Object.keys(daysMap).reduce((a, b) => daysMap[a] > daysMap[b] ? a : b, 'Monday'); if(daysMap[peakDay] === 0) peakDay = "No bookings yet";
+                    let peakHour = Object.keys(hoursMap).reduce((a, b) => hoursMap[a] > hoursMap[b] ? a : b, '6:00 AM'); if(hoursMap[peakHour] === 0) peakHour = "No bookings yet";
+                    return { cash: cash.toLocaleString('en-US', { minimumFractionDigits: 2 }), gcash: gcash.toLocaleString('en-US', { minimumFractionDigits: 2 }), bank: bank.toLocaleString('en-US', { minimumFractionDigits: 2 }), grandTotal: grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }), peakDay: peakDay, peakHour: peakHour, daysData: daysMap, hoursData: hoursMap, maxDayValue: Math.max(...Object.values(daysMap), 1), maxHourValue: Math.max(...Object.values(hoursMap), 1) };
+                },
+
+                parseTimeInt(timeStr) { if(!timeStr) return 0; const [time, modifier] = timeStr.split(' '); let hours = parseInt(time.split(':')[0], 10); if (hours === 12 && modifier === 'AM') hours = 0; if (hours < 12 && modifier === 'PM') hours += 12; return hours; },
+                getAvailableFacilities(sport) { return sport ? this.facilityMap[sport] : []; },
+                handleSportTypeChange(slot, index) { slot.court = ''; if (this.errors.slots[index]) this.errors.slots[index].sportType = false; slot.remarks = this.remarksMap[slot.sportType] || ''; this.calculateTotals(); },
+                getAvailableTimeStarts(slot) { if (!slot.date || !slot.court) return this.timeOptions.slice(0,-1); return this.timeOptions.slice(0, -1).filter(time => { const h = this.parseTimeInt(time); for (let b of this.localBookings) { if (b.date === slot.date && (b.court === slot.court || b.court.includes('WHOLE') || slot.court.includes('WHOLE') || b.court.includes('ALL') || slot.court.includes('ALL'))) { const s = this.parseTimeInt(b.timeStart); const e = this.parseTimeInt(b.timeEnd); if (h >= s && h < e) return false; } } return true; }); },
+                getAvailableTimeEnds(slot) { if (!slot.date || !slot.court || !slot.timeStart) return []; const startH = this.parseTimeInt(slot.timeStart); return this.timeOptions.slice(1).filter(time => { const h = this.parseTimeInt(time); if (h <= startH) return false; for (let b of this.localBookings) { if (b.date === slot.date && (b.court === slot.court || b.court.includes('WHOLE') || slot.court.includes('WHOLE') || b.court.includes('ALL') || slot.court.includes('ALL'))) { const s = this.parseTimeInt(b.timeStart); const e = this.parseTimeInt(b.timeEnd); if (s < h && e > startH) return false; } } return true; }); },
+                addSlot() { this.bookingForm.slots.push({ id: Date.now() + Math.random(), date: new Date().toISOString().split('T')[0], sportType: '', court: '', remarks: '', timeStart: '', timeEnd: '' }); this.errors.slots.push({}); },
+                removeSlot(index) { if (this.bookingForm.slots.length > 1) { this.bookingForm.slots.splice(index, 1); this.errors.slots.splice(index, 1); this.calculateTotals(); } },
+                
+                validateForm() {
+                    this.errors = { fullName: false, email: false, contactNumber: false, paymentReference: false, slots: [] }; let errorCount = 0; let conflictError = null;
+                    if (!this.bookingForm.fullName) { this.errors.fullName = true; errorCount++; }
+                    if (!this.bookingForm.contactNumber) { this.errors.contactNumber = true; errorCount++; }
+                    if (this.bookingForm.paymentMode !== 'Cash' && !this.bookingForm.paymentReference.trim()) { this.errors.paymentReference = true; errorCount++; }
+                    this.bookingForm.slots.forEach((slot, index) => { let slotErrors = {}; if (!slot.date) { slotErrors.date = true; errorCount++; } if (!slot.sportType) { slotErrors.sportType = true; errorCount++; } if (!slot.court) { slotErrors.court = true; errorCount++; } if (!slot.timeStart) { slotErrors.timeStart = true; errorCount++; } if (!slot.timeEnd) { slotErrors.timeEnd = true; errorCount++; } this.errors.slots[index] = slotErrors; });
+                    if (errorCount === 0) { for (let i = 0; i < this.bookingForm.slots.length; i++) { let newSlot = this.bookingForm.slots[i]; const newStart = this.parseTimeInt(newSlot.timeStart); const newEnd = this.parseTimeInt(newSlot.timeEnd); for (let existing of this.localBookings) { if (existing.date === newSlot.date) { const courtConflict = (existing.court === newSlot.court) || (existing.court.includes('WHOLE') || newSlot.court.includes('WHOLE') || existing.court.includes('ALL') || newSlot.court.includes('ALL')); if (courtConflict) { const existStart = this.parseTimeInt(existing.timeStart); const existEnd = this.parseTimeInt(existing.timeEnd); if (newStart < existEnd && newEnd > existStart) { this.errors.slots[i].timeStart = true; this.errors.slots[i].timeEnd = true; this.errors.slots[i].court = true; conflictError = `Double Booking Blocked: ${newSlot.court} is already reserved on ${newSlot.date} between ${existing.timeStart} and ${existing.timeEnd}.`; break; } } } } if (conflictError) break; } }
+                    if (conflictError) return conflictError; if (errorCount > 0) return `Please complete all highlighted fields.`; return null; 
+                },
+
+                calculateTotals() {
+                    let totalAmount = 0; let totalHours = 0;
+                    this.bookingForm.slots.forEach(slot => { if (slot.timeStart && slot.timeEnd) { const startHour = this.parseTimeInt(slot.timeStart); const endHour = this.parseTimeInt(slot.timeEnd); if (endHour > startHour) { totalHours += (endHour - startHour); let dayRate = 450; let eveRate = 550; if (slot.sportType === 'Package A') { dayRate = 1500; eveRate = 2500; } else if (slot.sportType === 'Package B') { dayRate = 600; eveRate = 700; } else if (slot.sportType === 'Package C') { dayRate = 550; eveRate = 650; } for (let i = startHour; i < endHour; i++) { if (i >= 6 && i < 17) { totalAmount += dayRate; } else if (i >= 17 && i < 22) { totalAmount += eveRate; } } } } });
+                    this.bookingForm.totalHours = totalHours.toString(); this.bookingForm.baseAmount = totalAmount.toFixed(2); let extraChargesTotal = 0;
+                    if (this.bookingForm.additionalCharges) { this.bookingForm.additionalCharges.forEach(charge => { let amt = parseFloat(charge.amount); if (!isNaN(amt)) { extraChargesTotal += amt; } }); }
+                    this.bookingForm.grandTotal = (totalAmount + extraChargesTotal).toFixed(2);
+                },
+
+                getBookingData(block, court) {
+                    const blockHour = parseInt(block.start.split(':')[0], 10); 
+                    for (let b of this.localBookings) { if (b.date === this.currentDate && (b.court === court || b.court === 'WHOLE GYM' || b.court === 'ALL 3 COURTS')) { const startH = this.parseTimeInt(b.timeStart); const endH = this.parseTimeInt(b.timeEnd); if (blockHour >= startH && blockHour < endH) { return { booked: true, title: b.customer, bookingRef: b.ref, status: b.status }; } } }
+                    return { booked: false };
+                },
+
+                changeDay(offset) { this.isLoading = true; let dateObj = new Date(this.currentDate); dateObj.setDate(dateObj.getDate() + offset); this.currentDate = dateObj.toISOString().split('T')[0]; setTimeout(() => { this.isLoading = false; }, 300); },
+                fetchAvailabilityForDate(date) { this.isLoading = true; this.currentDate = date; setTimeout(() => { this.isLoading = false; }, 300); },
+
+                handleCellClick(court, block) {
+                    this.bookingForm.slots = [{ id: Date.now(), date: this.currentDate, sportType: 'Basketball', court: court, remarks: this.remarksMap['Basketball'], timeStart: block.queryTime, timeEnd: '' }];
+                    this.errors.slots = [{}]; const startIndex = this.timeOptions.indexOf(block.queryTime);
+                    if (startIndex !== -1 && startIndex < this.timeOptions.length - 1) { this.bookingForm.slots[0].timeEnd = this.timeOptions[startIndex + 1]; }
+                    this.calculateTotals(); this.switchView('new-booking'); window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                showToast(msg, type = 'success') {
+                    const toast = document.getElementById('toast'); const toastMsg = document.getElementById('toast-text'); const toastTitle = document.getElementById('toast-title'); const toastIcon = document.getElementById('toast-icon'); const iconBg = document.getElementById('icon-bg');
+                    toastMsg.innerText = msg;
+                    if (type === 'error') { toast.className = `print:hidden fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] transform transition-all duration-300 bg-white text-slate-800 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl shadow-floating flex items-center border border-red-100 max-w-[90vw]`; toastTitle.innerText = "Action Required"; toastTitle.className = "block font-bold text-xs md:text-sm text-red-600"; toastIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>`; iconBg.className = "bg-red-50 p-2 md:p-2.5 rounded-lg md:rounded-xl mr-3 md:mr-4 text-red-500"; } 
+                    else { toast.className = `print:hidden fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] transform transition-all duration-300 bg-white text-slate-800 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl shadow-floating flex items-center border border-slate-100 max-w-[90vw]`; toastTitle.innerText = "Success"; toastTitle.className = "block font-bold text-xs md:text-sm text-slate-900"; toastIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>`; iconBg.className = "bg-green-50 p-2 md:p-2.5 rounded-lg md:rounded-xl mr-3 md:mr-4 text-green-500"; }
+                    toast.classList.remove('translate-y-20', 'opacity-0'); toast.classList.add('translate-y-0', 'opacity-100');
+                    setTimeout(() => { toast.classList.remove('translate-y-0', 'opacity-100'); toast.classList.add('translate-y-20', 'opacity-0'); }, 5000); 
+                },
+
+                switchView(viewName) { this.currentView = viewName; this.sidebarOpen = false; this.searchQuery = ''; if (viewName === 'master-list' || viewName === 'pending' || viewName === 'calendar') { this.loadMasterList(); } window.scrollTo({ top: 0, behavior: 'smooth' }); },
+
+                async loadMasterList() {
+                    if (!this.scriptURL || this.scriptURL.includes('YOUR_GOOGLE_APPS_SCRIPT')) return;
+                    this.isLoading = true;
+                    try {
+                        const cacheBuster = (this.scriptURL.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
+                        const response = await fetch(this.scriptURL + cacheBuster);
+                        const result = await response.json();
+                        if (result.status === 'success' && result.data) {
+                            this.masterList = result.data; let newLocalBookings = [];
+                            result.data.forEach(item => { if (item.status === 'Confirmed' || item.status === 'Pending' || item.status === 'Rescheduled') { newLocalBookings.push({ ref: item.bookingRef || 'BK-LIVE', customer: item.fullName, date: item.date, court: item.facility, timeStart: item.timeStart, timeEnd: item.timeEnd, status: item.status }); } });
+                            this.localBookings = newLocalBookings; localStorage.setItem('skills_gym_bookings', JSON.stringify(this.localBookings)); localStorage.setItem('skills_gym_master_list', JSON.stringify(this.masterList));
+                        }
+                    } catch (error) { console.error("Server sync error, using local cache.", error); } finally { this.isLoading = false; }
+                },
+
+                async submitBooking() {
+                    const errorMessage = this.validateForm(); if (errorMessage) { this.showToast(errorMessage, 'error'); return; }
+                    this.isLoading = true;
+                    const refNumber = 'BK-' + Math.floor(Math.random() * 90000 + 10000);
+                    const targetDate = this.bookingForm.slots[0].date; const now = new Date();
+                    this.lastSavedBooking = JSON.parse(JSON.stringify({ ...this.bookingForm, refNumber: refNumber, printDate: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }));
+                    const safePaymentString = this.bookingForm.paymentMode === 'Cash' ? 'Cash' : `${this.bookingForm.paymentMode} (Ref: ${this.bookingForm.paymentReference})`;
+                    this.masterList.unshift({ bookingRef: refNumber, timestamp: now.toISOString(), fullName: this.bookingForm.fullName, organization: this.bookingForm.organization || 'N/A', contactNumber: this.bookingForm.contactNumber, date: targetDate + (this.bookingForm.slots.length > 1 ? ` (+${this.bookingForm.slots.length - 1})` : ''), facility: this.bookingForm.slots[0].court, timeStart: this.bookingForm.slots[0].timeStart, timeEnd: this.bookingForm.slots[0].timeEnd, grandTotal: this.bookingForm.grandTotal, paymentMode: safePaymentString, status: 'Confirmed' });
+                    localStorage.setItem('skills_gym_master_list', JSON.stringify(this.masterList));
+                    const backendPayload = { ...this.bookingForm, bookingRef: refNumber, paymentMode: safePaymentString, contactNumber: this.bookingForm.contactNumber, status: 'Confirmed' };
+                    try { await fetch(this.scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(backendPayload) }); } catch (error) { console.log("Offline backup generated."); } finally { this.isLoading = false; this.showToast(`Booking ${refNumber} Saved!`, 'success'); this.showReceiptModal = true; }
+                },
+
+                printAndFinish() { window.print(); setTimeout(() => { this.finishAndRedirect(); }, 500); },
+                finishAndRedirect() { this.showReceiptModal = false; const targetDate = this.lastSavedBooking.slots[0].date; this.bookingForm = { fullName: '', organization: '', email: '', contactNumber: '', address: '', idType: 'National ID', idNumber: '', slots: [ { id: Date.now(), date: new Date().toISOString().split('T')[0], sportType: '', court: '', remarks: '', timeStart: '', timeEnd: '' } ], totalHours: '0', baseAmount: '0.00', grandTotal: '0.00', paymentMode: 'Cash', paymentReference: '', additionalCharges: [] }; this.errors = { paymentReference: false, slots: [{}] }; this.lastSavedBooking = null; this.currentDate = targetDate; this.switchView('calendar'); }
+            }))
+        })
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased overflow-x-hidden selection:bg-brand-blue/20 selection:text-brand-blue" x-data="appData">
+
+    <div id="app-wrapper" class="print:hidden flex h-screen overflow-hidden ambient-gradient relative">
+        <div x-show="sidebarOpen" class="mobile-overlay fixed inset-0 bg-slate-900/60 z-20 lg:hidden backdrop-blur-sm" @click="sidebarOpen = false" x-transition.opacity style="display: none;"></div>
+
+        <aside class="w-[260px] md:w-[280px] bg-white/90 backdrop-blur-xl flex flex-col fixed inset-y-0 left-0 z-30 lg:static shadow-[10px_0_30px_rgba(0,0,0,0.02)] border-r border-slate-200/50 transition-transform duration-300 transform" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+            <div class="flex items-center justify-between px-6 md:px-8 h-20 md:h-24 border-b border-slate-100/50">
+                <div class="flex items-center">
+                    <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-brand-blue to-indigo-600 flex items-center justify-center mr-2.5 md:mr-3 shadow-lg shadow-brand-blue/30"><svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
+                    <h1 class="text-lg md:text-xl font-black tracking-tight text-brand-dark">SKILLS</h1>
+                </div>
+                <button @click="sidebarOpen = false" class="lg:hidden text-slate-400 hover:text-slate-800 p-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            
+            <nav class="p-4 md:p-5 space-y-1 md:space-y-1.5 mt-2 flex-1 overflow-y-auto hide-scroll">
+                <p class="px-3 md:px-4 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 md:mb-4 mt-2">Menu</p>
+                <a href="#" @click.prevent="switchView('dashboard')" :class="currentView === 'dashboard' ? 'bg-white shadow-sm border border-slate-100 text-brand-blue' : 'text-slate-500 hover:bg-slate-50/80 hover:text-slate-800'" class="flex items-center px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl transition-all font-semibold text-xs md:text-sm"><svg class="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3" :class="currentView === 'dashboard' ? 'text-brand-blue' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012-2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> Dashboard</a>
+                <a href="#" @click.prevent="switchView('calendar')" :class="currentView === 'calendar' ? 'bg-white shadow-sm border border-slate-100 text-brand-blue' : 'text-slate-500 hover:bg-slate-50/80 hover:text-slate-800'" class="flex items-center px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl transition-all font-semibold text-xs md:text-sm"><svg class="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3" :class="currentView === 'calendar' ? 'text-brand-blue' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Live Calendar</a>
+                <a href="#" @click.prevent="switchView('new-booking')" :class="currentView === 'new-booking' ? 'bg-white shadow-sm border border-slate-100 text-brand-blue' : 'text-slate-500 hover:bg-slate-50/80 hover:text-slate-800'" class="flex items-center px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl transition-all font-semibold text-xs md:text-sm"><svg class="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3" :class="currentView === 'new-booking' ? 'text-brand-blue' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> New Booking</a>
+                
+                <div class="pt-4 md:pt-6 mt-3 md:mt-4 border-t border-slate-100/50">
+                    <p class="px-3 md:px-4 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 md:mb-4">Database</p>
+                    <a href="#" @click.prevent="switchView('pending')" :class="currentView === 'pending' ? 'bg-white shadow-sm border border-slate-100 text-brand-blue' : 'text-slate-500 hover:bg-slate-50/80 hover:text-slate-800'" class="flex items-center px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl transition-all font-semibold text-xs md:text-sm"><svg class="w-4 h-4 md:w-5 h-5 mr-2 md:mr-3" :class="currentView === 'pending' ? 'text-brand-blue' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Approvals <span class="ml-auto bg-amber-100 text-amber-600 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold" x-text="pendingBookings.length"></span></a>
+                    <a href="#" @click.prevent="switchView('master-list')" :class="currentView === 'master-list' ? 'bg-white shadow-sm border border-slate-100 text-brand-blue' : 'text-slate-500 hover:bg-slate-50/80 hover:text-slate-800'" class="flex items-center px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl transition-all font-semibold text-xs md:text-sm"><svg class="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3" :class="currentView === 'master-list' ? 'text-brand-blue' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg> Master Registry</a>
+                </div>
+            </nav>
+            <div class="p-4 md:p-6 border-t border-slate-100/50 bg-slate-50/50 mt-auto">
+                <div class="flex items-center group"><div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white border border-slate-200 text-brand-dark flex items-center justify-center font-bold text-xs md:text-sm shadow-sm">AT</div><div class="ml-2 md:ml-3"><p class="text-xs md:text-sm font-bold text-brand-dark leading-tight">Anthony Toñacao</p><p class="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Property Custodian</p></div></div>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+            <div x-show="isLoading" class="absolute inset-0 z-50 bg-white/60 backdrop-blur-md flex flex-col items-center justify-center" style="display: none;" x-transition.opacity>
+                <div class="bg-white p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-saas border border-slate-100 flex flex-col items-center"><svg class="animate-spin h-6 w-6 md:h-8 md:w-8 text-brand-blue mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Processing...</span></div>
+            </div>
+
+            <header class="h-16 md:h-24 flex items-center justify-between px-4 md:px-10 z-10 shrink-0 bg-white/50 md:bg-transparent backdrop-blur-md md:backdrop-blur-none border-b border-slate-100/50 md:border-none sticky top-0 md:static">
+                <div class="flex items-center"><button @click="sidebarOpen = true" class="lg:hidden p-1.5 md:p-2.5 rounded-lg md:rounded-xl bg-white border border-slate-200 text-slate-600 mr-3 md:mr-4 shadow-sm"><svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button><div><h2 class="text-base md:text-2xl font-black text-brand-dark tracking-tight" x-text="currentView === 'dashboard' ? 'Dashboard Summary' : (currentView === 'calendar' ? 'Live Schedule' : (currentView === 'new-booking' ? 'New Reservation' : (currentView === 'pending' ? 'Action Required' : 'Database Archive')))"></h2><p class="text-[10px] md:text-sm text-slate-400 font-medium mt-0 md:mt-0.5 hidden sm:block">Primary Skills Educational Foundation, Inc.</p></div></div>
+                <div class="flex space-x-3"><button @click="loadMasterList()" class="w-8 h-8 md:w-10 md:h-10 bg-white rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-brand-blue shadow-sm transition-all" title="Synchronize Data"><svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18"></path></svg></button></div>
+            </header>
+
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-10 pt-4 md:pt-2">
+                
+                <div x-show="currentView === 'dashboard'" style="display: none;" x-transition.opacity.duration.300ms class="space-y-6 md:space-y-8 pb-10">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 md:gap-4"><p class="text-slate-500 font-medium text-xs md:text-sm">Real-time revenue processing breakdown & metrics.</p><button @click="switchView('new-booking')" class="bg-brand-blue hover:bg-brand-blueHover text-white px-5 md:px-6 py-2.5 md:py-3 rounded-full font-bold shadow-floating transition-all flex items-center text-xs md:text-sm w-full sm:w-auto justify-center"><span class="mr-2 text-base md:text-lg leading-none">+</span> Walk-In Reservation</button></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+                        <div class="bg-white/90 backdrop-blur-sm rounded-2xl md:rounded-3xl shadow-saas border border-white p-5 md:p-6"><p class="text-[9px] md:text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">Gross Gym Revenue</p><h3 class="text-xl md:text-3xl font-black text-brand-dark tracking-tight" x-text="'₱' + metrics.grandTotal"></h3><div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 md:mt-4 overflow-hidden"><div class="bg-brand-blue h-full w-full"></div></div></div>
+                        <div class="bg-white/90 backdrop-blur-sm rounded-2xl md:rounded-3xl shadow-saas border border-white p-5 md:p-6"><p class="text-[9px] md:text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">Cash Remittances</p><h3 class="text-xl md:text-3xl font-black text-emerald-600 tracking-tight" x-text="'₱' + metrics.cash"></h3><div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 md:mt-4 overflow-hidden"><div class="bg-emerald-500 h-full w-3/4"></div></div></div>
+                        <div class="bg-white/90 backdrop-blur-sm rounded-2xl md:rounded-3xl shadow-saas border border-white p-5 md:p-6"><p class="text-[9px] md:text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">GCash Collections</p><h3 class="text-xl md:text-3xl font-black text-blue-500 tracking-tight" x-text="'₱' + metrics.gcash"></h3><div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 md:mt-4 overflow-hidden"><div class="bg-blue-400 h-full w-1/2"></div></div></div>
+                        <div class="bg-white/90 backdrop-blur-sm rounded-2xl md:rounded-3xl shadow-saas border border-white p-5 md:p-6"><p class="text-[9px] md:text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">Bank Transfers</p><h3 class="text-xl md:text-3xl font-black text-indigo-600 tracking-tight" x-text="'₱' + metrics.bank"></h3><div class="w-full bg-slate-100 h-1.5 rounded-full mt-3 md:mt-4 overflow-hidden"><div class="bg-indigo-500 h-full w-1/4"></div></div></div>
+                    </div>
+                </div>
+
+                <div x-show="currentView === 'calendar'" style="display: none;" x-transition.opacity.duration.300ms class="flex flex-col max-w-7xl mx-auto w-full pb-10">
+                    <div class="flex items-center space-x-3 md:space-x-4 mb-4 md:mb-8">
+                        <div class="flex items-center bg-white rounded-xl md:rounded-2xl border border-slate-200 shadow-saas overflow-hidden h-10 md:h-12 p-1"><button @click="changeDay(-1)" class="px-3 md:px-4 h-full rounded-lg md:rounded-xl text-slate-400 hover:bg-slate-50 hover:text-brand-dark font-bold">&lt;</button><input type="date" x-model="currentDate" @change="fetchAvailabilityForDate($event.target.value)" class="border-none text-xs md:text-sm font-bold text-brand-dark px-2 md:px-3 h-full text-center outline-none bg-transparent w-32 md:w-40 cursor-pointer"><button @click="changeDay(1)" class="px-3 md:px-4 h-full rounded-lg md:rounded-xl text-slate-400 hover:bg-slate-50 hover:text-brand-dark font-bold">&gt;</button></div>
+                    </div>
+                    <div class="bg-white/95 rounded-2xl md:rounded-3xl shadow-saas border border-white overflow-hidden mb-10">
+                        <div class="overflow-x-auto touch-pan-x"><div class="min-w-[600px] md:min-w-[850px]">
+                            <div class="grid grid-cols-[120px_1fr_1fr_1fr] md:grid-cols-[160px_1fr_1fr_1fr] bg-brand-soft border-b border-slate-200 sticky top-0 z-10"><div class="p-3 md:p-5 text-center text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest border-r border-slate-200/60">Time Block</div><div class="p-3 md:p-5 text-center font-bold text-brand-dark border-r border-slate-200/60 text-xs md:text-sm">Court 1</div><div class="p-3 md:p-5 text-center font-bold text-brand-dark border-r border-slate-200/60 text-xs md:text-sm">Court 2</div><div class="p-3 md:p-5 text-center font-bold text-brand-dark text-xs md:text-sm">Court 3</div></div>
+                            <template x-for="block in timeBlocks" :key="block.start">
+                                <div class="grid grid-cols-[120px_1fr_1fr_1fr] md:grid-cols-[160px_1fr_1fr_1fr] border-b border-slate-100 group bg-white hover:bg-slate-50/40 transition-colors">
+                                    <div class="p-2 md:p-4 text-[9px] md:text-[10px] font-bold text-slate-400 text-center border-r border-slate-100 flex items-center justify-center whitespace-nowrap uppercase tracking-wider" x-text="block.label"></div>
+                                    <template x-for="court in ['Court 1', 'Court 2', 'Court 3']" :key="court">
+                                        <div class="p-1 md:p-2 border-r border-slate-100 last:border-r-0 h-20 md:h-24 relative">
+                                            <template x-if="getBookingData(block, court).booked">
+                                                <div class="w-full h-full rounded-xl md:rounded-2xl flex flex-col items-center justify-center cursor-pointer shadow-floating p-1 transition-all hover:opacity-90" :class="getBookingData(block, court).status === 'Pending' ? 'bg-amber-500 text-white' : 'bg-brand-blue text-white'">
+                                                    <span class="text-[7px] md:text-[8px] uppercase tracking-widest font-black bg-white/20 px-1.5 md:px-2 py-0.5 rounded-full mb-0.5 md:mb-1" x-text="getBookingData(block, court).status"></span>
+                                                    <span class="text-[10px] md:text-xs font-bold truncate w-full text-center px-1" x-text="getBookingData(block, court).title"></span>
+                                                    <template x-if="getBookingData(block, court).status === 'Confirmed'"><span class="text-[8px] md:text-[9px] font-mono font-black bg-white/20 px-1.5 md:px-2 py-0.5 rounded-md mt-0.5 md:mt-1 shadow-sm" x-text="(getBookingData(block, court).bookingRef || '').replace('REQ-', 'BK-')"></span></template>
+                                                    <template x-if="getBookingData(block, court).status === 'Pending'"><span class="text-[8px] md:text-[9px] font-mono font-black bg-white/20 px-1.5 md:px-2 py-0.5 rounded-md mt-0.5 md:mt-1 shadow-sm" x-text="getBookingData(block, court).bookingRef"></span></template>
+                                                </div>
+                                            </template>
+                                            <template x-if="!getBookingData(block, court).booked">
+                                                <div class="w-full h-full rounded-xl md:rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center text-brand-blue font-bold text-[10px] md:text-[11px] opacity-0 lg:group-hover:opacity-100 lg:hover:bg-brand-soft lg:hover:border-brand-blue/30 transition-all cursor-pointer" @click="handleCellClick(court, block)">+ Reserve</div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div></div>
+                    </div>
+                </div>
+
+                <div x-show="currentView === 'new-booking'" style="display: none;" x-transition.opacity.duration.300ms class="max-w-4xl mx-auto">
+                    <div class="bg-white/95 rounded-3xl md:rounded-[2rem] shadow-saas border border-white p-5 md:p-12 relative">
+                        <div class="border-b border-slate-100 pb-4 md:pb-6 mb-4 md:mb-6"><h3 class="text-sm md:text-base font-bold text-brand-dark mb-0.5">Client Information</h3></div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-5 mb-8 md:mb-10">
+                            <div><label class="form-label">Full Name <span class="text-red-500">*</span></label><input type="text" class="form-input" :class="errors.fullName ? '!border-red-400 !bg-red-50' : ''" placeholder="e.g. Juan Dela Cruz" x-model="bookingForm.fullName" @input="errors.fullName = false"></div>
+                            <div><label class="form-label">Organization Name</label><input type="text" class="form-input" placeholder="e.g. SKILLS Inc. (Optional)" x-model="bookingForm.organization"></div>
+                            <div><label class="form-label">Email Address</label><input type="email" class="form-input" placeholder="customer@domain.com" x-model="bookingForm.email"></div>
+                            <div><label class="form-label">Contact Number <span class="text-red-500">*</span></label><input type="tel" class="form-input" :class="errors.contactNumber ? '!border-red-400 !bg-red-50' : ''" placeholder="09XX XXX XXXX" x-model="bookingForm.contactNumber" @input="errors.contactNumber = false"></div>
+                        </div>
+
+                        <div class="border-b border-slate-100 pb-4 md:pb-6 mb-4 md:mb-6"><h3 class="text-sm md:text-base font-bold text-brand-dark mb-0.5">Allocation Scheduling</h3></div>
+
+                        <template x-for="(slot, index) in bookingForm.slots" :key="slot.id">
+                            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 md:p-6 mb-4 md:mb-5 relative shadow-xs">
+                                <button x-show="bookingForm.slots.length > 1" @click="removeSlot(index)" class="absolute top-3 right-3 md:top-5 md:right-5 text-[8px] md:text-[9px] font-bold text-red-500 bg-red-50 hover:bg-red-100 transition-colors px-2 md:px-3 py-1 md:py-1.5 rounded-lg uppercase tracking-wider">Remove</button>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 md:gap-x-5 gap-y-4 md:gap-y-5">
+                                    <div><label class="form-label">Event Date <span class="text-red-500">*</span></label><input type="date" class="form-input font-semibold text-xs md:text-sm" :class="errors.slots[index]?.date ? '!border-red-400 !bg-red-50' : ''" x-model="slot.date" @change="slot.timeStart=''; slot.timeEnd=''; calculateTotals(); if(errors.slots[index]) errors.slots[index].date = false"></div>
+                                    <div><label class="form-label">Type / Category <span class="text-red-500">*</span></label><select class="form-input font-semibold text-xs md:text-sm" :class="errors.slots[index]?.sportType ? '!border-red-400 !bg-red-50' : ''" x-model="slot.sportType" @change="handleSportTypeChange(slot, index)"><option value="" disabled>Select category...</option><option>Basketball</option><option>Volleyball</option><option>Badminton</option><option>Package A</option><option>Package B</option><option>Package C</option></select></div>
+                                    <div><label class="form-label">Allocated Area <span class="text-red-500">*</span></label><select class="form-input font-semibold text-xs md:text-sm" :class="errors.slots[index]?.court ? '!border-red-400 !bg-red-50' : ''" x-model="slot.court" :disabled="!slot.sportType" @change="slot.timeStart=''; slot.timeEnd=''; calculateTotals(); if(errors.slots[index]) errors.slots[index].court = false"><option value="" disabled>Select area...</option><template x-for="fac in getAvailableFacilities(slot.sportType)" :key="fac"><option x-text="fac" :value="fac"></option></template></select></div>
+                                    <div>
+                                        <label class="form-label">Time Start <span class="text-red-500">*</span></label>
+                                        <select class="form-input font-bold text-[11px] md:text-xs" :class="errors.slots[index]?.timeStart ? '!border-red-400 !bg-red-50' : ''" x-model="slot.timeStart" @change="calculateTotals(); slot.timeEnd=''; if(errors.slots[index]) errors.slots[index].timeStart = false">
+                                            <option value="" disabled>Start...</option><template x-for="time in getAvailableTimeStarts(slot)" :key="time"><option x-text="time" :value="time"></option></template>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Time End <span class="text-red-500">*</span></label>
+                                        <select class="form-input font-bold text-[11px] md:text-xs" :class="errors.slots[index]?.timeEnd ? '!border-red-400 !bg-red-50' : ''" x-model="slot.timeEnd" @change="calculateTotals(); if(errors.slots[index]) errors.slots[index].timeEnd = false" :disabled="!slot.timeStart">
+                                            <option value="" disabled>End...</option><template x-for="time in getAvailableTimeEnds(slot)" :key="time"><option x-text="time" :value="time"></option></template>
+                                        </select>
+                                    </div>
+                                    <div class="sm:col-span-1"><label class="form-label">Inclusions Context</label><input type="text" class="form-input text-slate-600 text-[11px] md:text-xs" placeholder="Parameters..." x-model="slot.remarks"></div>
+                                </div>
+                            </div>
+                        </template>
+                        <button @click.prevent="addSlot()" class="w-full py-3 md:py-4 mb-8 md:mb-10 bg-transparent border-2 border-dashed border-slate-200 rounded-2xl text-[11px] md:text-xs font-bold text-slate-400 hover:border-brand-blue hover:text-brand-blue hover:bg-brand-soft transition-all">+ Add Segment Block</button>
+
+                        <div class="mb-6 md:mb-8 bg-brand-dark rounded-2xl p-5 md:p-6 flex justify-between items-center shadow-lg">
+                            <div><label class="block text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Grand Total Payable</label><p class="text-[9px] md:text-[10px] text-white/40 font-medium">Philippine Peso (PHP)</p></div>
+                            <input type="text" class="bg-transparent text-right text-2xl md:text-3xl font-black text-white outline-none w-1/2" x-model="bookingForm.grandTotal" readonly>
+                        </div>
+
+                        <div class="mb-8 md:mb-10 grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 bg-brand-soft rounded-2xl p-5 md:p-6 border border-slate-100">
+                            <div><label class="form-label">Mode of Payment</label><select class="form-input font-bold bg-white text-xs md:text-sm" x-model="bookingForm.paymentMode" @change="if(bookingForm.paymentMode === 'Cash') { bookingForm.paymentReference = ''; errors.paymentReference = false; }"><option>Cash</option><option>GCash</option><option>Bank Transfer</option></select></div>
+                            <div x-show="bookingForm.paymentMode !== 'Cash'" x-transition.opacity><label class="form-label text-brand-blue">Reference String <span class="text-red-500">*</span></label><input type="text" class="form-input font-mono text-brand-blue font-bold tracking-widest bg-white text-[11px] md:text-sm" :class="errors.paymentReference ? '!border-red-400' : ''" placeholder="Transaction ID" x-model="bookingForm.paymentReference" @input="errors.paymentReference = false"></div>
+                        </div>
+                        <button @click="submitBooking()" class="w-full bg-brand-blue hover:bg-brand-blueHover text-white font-black py-4 rounded-full shadow-floating text-sm md:text-md">Commit Booking Sequence</button>
+                    </div>
+                </div>
+
+                <div x-show="currentView === 'pending'" style="display: none;" x-transition.opacity.duration.300ms class="max-w-7xl mx-auto">
+                    <div class="bg-white/95 rounded-2xl shadow-saas border border-white overflow-hidden">
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-transparent gap-4">
+                            <h3 class="font-bold text-xs md:text-sm text-brand-dark whitespace-nowrap">Pending Approvals Action Center</h3>
+                            <div class="flex items-center space-x-3 w-full sm:w-auto">
+                                <div class="relative flex-1 sm:w-56 md:w-64">
+                                    <svg class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    <input type="text" x-model="searchQuery" placeholder="Search REQ#, Name, or Contact..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/30 transition-all font-medium">
+                                </div>
+                                <button @click="loadMasterList()" class="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-brand-blue hover:text-brand-dark transition-colors">Sync</button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto touch-pan-x"><table class="w-full text-left border-collapse min-w-[700px]"><thead><tr class="bg-amber-50 text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-amber-700 border-b border-amber-100"><th class="p-3 md:p-4">Customer Name</th><th class="p-3 md:p-4">Contact Details & Pay Mode</th><th class="p-3 md:p-4">Requested Reservation</th><th class="p-3 md:p-4 text-center">Action Required</th></tr></thead>
+                                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
+                                    <template x-if="filteredPendingBookings.length === 0"><tr><td colspan="4" class="p-8 md:p-12 text-center text-slate-400 font-medium">No pending requests found.</td></tr></template>
+                                    <template x-for="item in filteredPendingBookings" :key="item.bookingRef">
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="p-3 md:p-4 font-bold text-brand-dark"><span class="block text-[10px] font-black text-brand-blue tracking-wider mb-1" x-text="item.bookingRef"></span><span x-text="item.fullName"></span><span class="block text-[8px] md:text-[9px] font-bold text-slate-400 mt-0.5 uppercase" x-text="item.organization"></span></td>
+                                            <td class="p-3 md:p-4"><a :href="'tel:' + item.contactNumber" class="inline-flex items-center text-brand-blue hover:text-brand-blueHover font-bold mb-1.5 bg-blue-50 hover:bg-blue-100 transition-colors px-2 py-1 rounded shadow-sm border border-blue-100" title="Click to call customer"><svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg><span x-text="item.contactNumber"></span></a><span class="block text-[8px] md:text-[9px] uppercase tracking-wider font-bold px-1.5 md:px-2 py-0.5 rounded bg-slate-200 text-slate-700 w-max" x-text="item.paymentMode"></span></td>
+                                            <td class="p-3 md:p-4"><span class="inline-block bg-slate-100 text-slate-600 font-bold px-1.5 md:px-2 py-0.5 rounded text-[9px] md:text-[10px] mr-1.5 md:mr-2" x-text="item.facility"></span><span class="text-slate-600 font-medium whitespace-nowrap" x-text="item.date + ' (' + item.timeStart + ' - ' + item.timeEnd + ')'"></span></td>
+                                            <td class="p-3 md:p-4 text-center"><button @click="initiateApproval(item)" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 md:px-4 md:py-2.5 rounded-full text-[10px] md:text-[11px] font-bold transition-colors shadow-sm whitespace-nowrap">Approve & Confirm</button></td>
+                                        </tr>
+                                    </template>
+                                </tbody></table></div>
+                    </div>
+                </div>
+
+                <div x-show="currentView === 'master-list'" style="display: none;" x-transition.opacity.duration.300ms class="max-w-7xl mx-auto">
+                    <div class="bg-white/95 rounded-2xl shadow-saas border border-white overflow-hidden">
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-transparent gap-4">
+                            <h3 class="font-bold text-xs md:text-sm text-brand-dark">Archive Historical Registry</h3>
+                            <div class="relative flex-1 sm:max-w-xs">
+                                <svg class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <input type="text" x-model="searchQuery" placeholder="Search Master List..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/30 transition-all font-medium">
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto touch-pan-x">
+                            <table class="w-full text-left border-collapse min-w-[900px]">
+                                <thead><tr class="bg-brand-soft text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200"><th class="p-3 md:p-4">Receipt ID</th><th class="p-3 md:p-4">Customer Base</th><th class="p-3 md:p-4">Date Field</th><th class="p-3 md:p-4">Facility Allocation</th><th class="p-3 md:p-4">Time Segment</th><th class="p-3 md:p-4 text-right">Amount (PHP)</th><th class="p-3 md:p-4 text-center">Actions</th></tr></thead>
+                                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
+                                    <template x-if="filteredMasterList.length === 0"><tr><td colspan="7" class="p-8 md:p-12 text-center text-slate-400 font-medium">Registry stack array empty.</td></tr></template>
+                                    <template x-for="item in filteredMasterList" :key="item.timestamp">
+                                        <tr class="hover:bg-slate-50/70 transition-colors" :class="item.status === 'Pending' ? 'bg-amber-50/30' : (item.status === 'Canceled' || item.status === 'Expired' ? 'bg-red-50/30 opacity-70' : (item.status === 'Rescheduled' ? 'bg-blue-50/30' : ''))">
+                                            <td class="p-3 md:p-4 font-bold tracking-wider" :class="item.status === 'Pending' ? 'text-amber-600' : (item.status === 'Canceled' || item.status === 'Expired' ? 'text-red-500' : 'text-brand-blue')" x-text="item.status === 'Confirmed' || item.status === 'Rescheduled' ? (item.bookingRef || 'BK-OLD').replace('REQ-', 'BK-') : (item.bookingRef || 'REQ-OLD')"></td>
+                                            <td class="p-3 md:p-4 font-bold text-brand-dark"><span x-text="item.fullName"></span><span class="block text-[9px] font-bold text-brand-blue mt-0.5"><a :href="'tel:' + item.contactNumber" class="hover:underline" x-text="item.contactNumber"></a></span></td>
+                                            <td class="p-3 md:p-4 text-slate-600 font-semibold whitespace-nowrap" x-text="item.date"></td>
+                                            <td class="p-3 md:p-4"><span class="inline-block bg-slate-100 text-slate-600 font-bold px-2 md:px-2.5 py-0.5 rounded-md text-[9px] md:text-[10px]" x-text="item.facility"></span></td>
+                                            <td class="p-3 md:p-4 text-slate-500 font-medium whitespace-nowrap">
+                                                <span x-text="item.timeStart"></span> - <span x-text="item.timeEnd"></span>
+                                                <template x-if="item.status === 'Pending'"><span class="ml-1.5 md:ml-2 bg-amber-100 text-amber-700 px-1.5 md:px-2 py-0.5 rounded text-[8px] md:text-[9px] uppercase tracking-wider font-bold">Pending</span></template>
+                                                <template x-if="item.status === 'Expired'"><span class="ml-1.5 md:ml-2 bg-red-100 text-red-700 px-1.5 md:px-2 py-0.5 rounded text-[8px] md:text-[9px] uppercase tracking-wider font-bold">Expired</span></template>
+                                                <template x-if="item.status === 'Canceled'"><span class="ml-1.5 md:ml-2 bg-red-100 text-red-700 px-1.5 md:px-2 py-0.5 rounded text-[8px] md:text-[9px] uppercase tracking-wider font-bold">Canceled</span></template>
+                                                <template x-if="item.status === 'Rescheduled'"><span class="ml-1.5 md:ml-2 bg-brand-blue text-white px-1.5 md:px-2 py-0.5 rounded text-[8px] md:text-[9px] uppercase tracking-wider font-bold">Rescheduled</span></template>
+                                            </td>
+                                            <td class="p-3 md:p-4 font-black text-brand-dark text-right" x-text="item.grandTotal"></td>
+                                            <td class="p-3 md:p-4 text-center">
+                                                <template x-if="item.status === 'Confirmed'">
+                                                    <button @click="openManage(item)" class="text-[9px] md:text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1.5 px-3 rounded shadow-sm border border-slate-200 transition-colors uppercase tracking-wider">Manage</button>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        
+        <div x-show="showManageModal" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" @click="showManageModal = false" x-transition.opacity></div>
+            <div class="bg-white rounded-3xl shadow-2xl z-[110] max-w-md w-full p-6 md:p-8 transform transition-all flex flex-col max-h-[90vh] overflow-y-auto" x-transition.scale>
+                <div class="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-lg md:text-xl font-black text-brand-dark leading-none">Manage Booking</h3>
+                        <p class="text-[10px] md:text-xs font-bold text-brand-blue uppercase tracking-widest mt-1.5" x-text="manageData ? manageData.bookingRef.replace('REQ-', 'BK-') : ''"></p>
+                    </div>
+                    <button @click="showManageModal = false" class="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+
+                <template x-if="manageData && manageMode === 'select'">
+                    <div class="space-y-4">
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 mb-2 text-sm text-slate-600">
+                            <p><strong class="text-slate-800">Customer:</strong> <span x-text="manageData.fullName"></span></p>
+                            <p class="mt-1"><strong class="text-slate-800">Current Date:</strong> <span x-text="manageData.date.split(' ')[0]"></span></p>
+                            <p class="mt-1"><strong class="text-slate-800">Time:</strong> <span x-text="manageData.timeStart"></span> - <span x-text="manageData.timeEnd"></span></p>
+                        </div>
+                        <button @click="manageMode = 'reschedule'" class="w-full bg-brand-blue hover:bg-brand-blueHover text-white font-bold py-3.5 rounded-xl transition-all shadow-md text-sm">Reschedule Booking</button>
+                        <button @click="manageMode = 'cancel'" class="w-full bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-bold py-3.5 rounded-xl transition-all shadow-sm text-sm">Cancel Booking</button>
+                    </div>
+                </template>
+
+                <template x-if="manageData && (manageMode === 'reschedule' || manageMode === 'cancel')">
+                    <div class="space-y-5">
+                        <div class="flex items-center space-x-2 text-xs font-bold text-slate-500 mb-2 cursor-pointer hover:text-slate-800 transition-colors w-max" @click="manageMode = 'select'"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg> <span>Back</span></div>
+                        
+                        <div class="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-black text-amber-900 text-sm" x-text="manageMode === 'reschedule' ? 'Rescheduling Penalty' : 'Cancellation Penalty'"></h4>
+                                <span class="bg-amber-200 text-amber-800 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest" x-text="isForceMajeure ? 'Waived' : penaltyCalculation.percentage"></span>
+                            </div>
+                            <div class="flex justify-between text-xs font-medium text-amber-700 mb-1"><span>Original Amount:</span><span x-text="'PHP ' + manageData.grandTotal"></span></div>
+                            <div class="flex justify-between text-xs font-black text-amber-900 pt-2 border-t border-amber-200 mt-2"><span>System Penalty Fee:</span><span x-text="'PHP ' + penaltyCalculation.fee.toFixed(2)"></span></div>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                            <div><span class="block text-xs font-bold text-slate-700">Force Majeure Waiver</span><span class="block text-[9px] text-slate-500 mt-0.5">Typhoons, government suspension, etc.</span></div>
+                            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in"><input type="checkbox" x-model="isForceMajeure" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-slate-300 transition-colors z-10 top-0 left-0 m-0"><label class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-300 cursor-pointer"></label></div>
+                        </div>
+
+                        <template x-if="manageMode === 'reschedule'">
+                            <div><label class="form-label text-brand-blue">Select New Date <span class="text-red-500">*</span></label><input type="date" class="form-input bg-white border-blue-200" x-model="newRescheduleDate"></div>
+                        </template>
+
+                        <div class="pt-4 mt-2 border-t border-slate-100">
+                            <template x-if="manageMode === 'reschedule'">
+                                <button @click="submitMutation('reschedule')" class="w-full bg-brand-dark hover:bg-black text-white font-bold py-3.5 rounded-xl shadow-floating transition-all text-sm">Confirm Reschedule</button>
+                            </template>
+                            <template x-if="manageMode === 'cancel'">
+                                <button @click="submitMutation('cancel')" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-floating transition-all text-sm">Confirm Cancellation</button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div x-show="showReceiptModal" style="display: none;" class="fixed inset-0 z-[90] flex items-center justify-center p-4"><div class="absolute inset-0 bg-brand-dark/30 backdrop-blur-xs" @click="finishAndRedirect()"></div><div class="bg-white rounded-[2rem] shadow-2xl z-[100] max-w-sm w-full p-6 md:p-8 transform transition-all" x-transition.scale.origin.bottom><div class="w-14 h-14 md:w-16 md:h-16 bg-brand-blue text-white rounded-full flex items-center justify-center mb-4 md:mb-5 mx-auto shadow-floating"><svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div><h3 class="text-lg md:text-xl font-black text-center text-brand-dark mb-1 tracking-tight">Saved Securely</h3><p class="text-center text-slate-400 text-[11px] md:text-xs mb-6 md:mb-8 leading-relaxed">The sheet cache is written and the confirmation email transaction has executed.</p><div class="flex flex-col space-y-2.5 md:space-y-3"><button @click="printAndFinish()" class="w-full bg-brand-dark hover:bg-black text-white text-xs md:text-sm font-bold py-3 md:py-3.5 rounded-full shadow-md transition-all flex justify-center items-center">Print Copy Statement</button><button @click="finishAndRedirect()" class="w-full py-2.5 md:py-3 text-slate-400 text-[11px] md:text-xs font-bold hover:bg-slate-50 rounded-full transition-colors">Return to Dashboard</button></div></div></div>
+
+        <div x-show="showApprovalPrintModal" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" @click="executeApproval(false)" x-transition.opacity></div>
+            <div class="bg-white rounded-[2rem] shadow-2xl z-[110] max-w-sm w-full p-6 md:p-8 transform transition-all text-center" x-transition.scale>
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-4 md:mb-5 mx-auto shadow-sm"><svg class="w-7 h-7 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                <h3 class="text-lg md:text-xl font-black text-brand-dark mb-1.5 md:mb-2">Booking Approved</h3>
+                <p class="text-slate-500 text-xs md:text-sm mb-6 md:mb-8 leading-relaxed">The request has been officially verified. Would you like to print the receipt for this booking now?</p>
+                <div class="flex flex-col space-y-2.5 md:space-y-3">
+                    <button @click="executeApproval(true)" class="w-full bg-brand-blue hover:bg-brand-blueHover text-white font-bold py-3 md:py-3.5 rounded-xl shadow-floating transition-all text-sm">Yes, Print Receipt</button>
+                    <button @click="executeApproval(false)" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 md:py-3.5 rounded-xl transition-all text-sm">Skip & Confirm</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="print-receipt-wrapper" class="hidden text-black font-sans w-full max-w-[800px] mx-auto">
+        <template x-if="lastSavedBooking">
+            <div class="flex flex-col min-h-screen">
+                <template x-for="(copyType, i) in ['CUSTOMER COPY', 'ADMINISTRATOR COPY']" :key="copyType">
+                    <div class="flex-1 flex flex-col py-8 px-6 bg-white">
+                        <div class="text-center border-b-2 border-black pb-4 mb-4"><h1 class="text-3xl font-black uppercase tracking-tight">SKILLS Gym Rental</h1><p class="text-sm font-semibold uppercase tracking-widest text-gray-600 mt-1">Primary Skills Educational Foundation, Inc.</p><p class="text-xs text-gray-500 mt-1">Gen. Maxilom Ave, Cebu City, Philippines</p><div class="mt-4 inline-block bg-black text-white px-4 py-1 text-xs font-bold uppercase tracking-widest rounded-sm" x-text="copyType"></div></div>
+                        <div class="flex justify-between items-start mb-6 text-sm">
+                            <div><p class="text-gray-500 uppercase text-xs font-bold mb-1">Billed To:</p><p class="font-bold text-lg" x-text="lastSavedBooking.fullName"></p><p class="text-gray-600" x-text="lastSavedBooking.contactNumber"></p></div>
+                            <div class="text-right"><p class="text-gray-500 uppercase text-xs font-bold mb-1">Receipt Ref:</p><p class="font-bold text-xl" x-text="(lastSavedBooking.refNumber || '').replace('REQ-', 'BK-')"></p><p class="text-gray-500 mt-1" x-text="'Printed: ' + lastSavedBooking.printDate"></p></div>
+                        </div>
+                        <div class="mb-4">
+                            <table class="w-full text-left text-sm border-t border-b border-gray-300"><thead><tr class="uppercase text-xs text-gray-500 border-b border-gray-200"><th class="py-2">Date</th><th class="py-2">Facility / Sport</th><th class="py-2 text-right">Time Slot</th></tr></thead>
+                                <tbody><template x-for="slot in lastSavedBooking.slots"><tr class="border-b border-gray-100 last:border-0"><td class="py-2 font-semibold" x-text="slot.date"></td><td class="py-2"><span x-text="slot.court"></span> - <span class="text-gray-500" x-text="slot.sportType"></span></td><td class="py-2 text-right font-semibold"><span x-text="slot.timeStart"></span> to <span x-text="slot.timeEnd"></span></td></tr></template></tbody>
+                            </table>
+                        </div>
+                        <div class="mt-auto flex flex-col items-end pt-4"><div class="w-1/2"><div class="flex justify-between text-sm mb-3 items-end"><span class="text-gray-500">Payment Mode:</span><div class="text-right"><span class="font-bold uppercase block" x-text="lastSavedBooking.paymentMode"></span><template x-if="lastSavedBooking.paymentMode !== 'Cash' && lastSavedBooking.paymentReference"><span class="text-xs text-gray-500 font-mono block mt-0.5" x-text="'Ref: ' + lastSavedBooking.paymentReference"></span></template></div></div><div class="flex justify-between items-center border-t-2 border-black pt-2"><span class="font-bold uppercase tracking-wider">Grand Total</span><span class="text-2xl font-black" x-text="'PHP ' + lastSavedBooking.grandTotal"></span></div></div></div>
+                        <div class="grid grid-cols-2 gap-8 mt-12 pt-8 text-center text-sm"><div><div class="border-t border-black pt-2">Customer Signature</div></div><div><div class="font-bold text-lg leading-none mb-1">Anthony Toñacao</div><div class="border-t border-black pt-2">Authorized Cashier</div></div></div>
+                    </div>
+                    <div x-show="i === 0" class="border-b-2 border-dashed border-gray-400 my-4 flex-shrink-0 relative"><span class="absolute right-8 -top-3 bg-white px-4 text-xs font-bold uppercase tracking-widest text-gray-400">Fold or Cut Here</span></div>
+                </template>
+            </div>
+        </template>
+    </div>
+    <div id="toast" class="print:hidden fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] transform translate-y-20 opacity-0 transition-all duration-300 max-w-[90vw]"><div id="icon-bg" class="p-2 md:p-2.5 rounded-lg md:rounded-xl mr-3 md:mr-4"><svg id="toast-icon" class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg></div><div><span id="toast-title" class="block font-bold text-xs md:text-sm"></span><span id="toast-text" class="block text-[10px] md:text-xs text-white/80 mt-0.5"></span></div></div>
+</body>
+</html>
